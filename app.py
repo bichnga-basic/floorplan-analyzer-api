@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, request, jsonify
 import os
 import uuid
@@ -6,6 +5,11 @@ import uuid
 app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Add a root route for testing
+@app.route("/", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"}), 200
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
