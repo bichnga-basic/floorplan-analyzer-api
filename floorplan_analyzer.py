@@ -1,4 +1,4 @@
-# floorplan_analyzer.py
+# hybrid_floorplan_analyzer.py
 import cv2
 import numpy as np
 import fitz  # PyMuPDF
@@ -114,6 +114,7 @@ def detect_walls_and_doors(gray):
                 walls.append({
                     "x": int(x), "y": int(y), "width": int(w), "height": int(h)
                 })
+
         edges = cv2.Canny(gray, 50, 150, apertureSize=3)
         lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=150, minLineLength=80, maxLineGap=50)
         doors = []
@@ -153,14 +154,14 @@ def detect_fixture_by_template(gray, template_path, threshold=0.7):
     loc = np.where(result >= threshold)
 
     matches = []
-    for pt in zip(*loc[::-1]):  # Switch x and y
+    for pt in zip(*loc[::-1]):
         x, y = pt[0], pt[1]
         matches.append({
             "x": int(x),
             "y": int(y),
             "width": int(w),
             "height": int(h),
-            "confidence": float(result[y, x]),
+            "confidence": float(result[y, y]),
             "type": os.path.basename(template_path).replace(".png", "")
         })
 
@@ -173,6 +174,50 @@ def detect_fixture_by_template(gray, template_path, threshold=0.7):
         ):
             filtered.append(match)
     return filtered
+
+
+def detect_circular_fixtures(gray):
+    """Detect circular fixtures (toilet, sink)"""
+    circles = cv2.HoughCircles(
+        gray, cv2.HOUGH_GRADIENT, dp=1.2, minDist=100,
+        param1=50, param2=30, minRadius=15, maxRadius=35
+    )
+    fixtures = []
+    if circles is not None:
+        circles = np.round(circles[0, :]).astype("int")
+        for (x, y, r) in circles:
+            if 15 <= r <= 35:
+                fixtures.append({
+                    "x": int(x),
+                    "y": int(y),
+                    "radius": int(r),
+                    "type": "sink_or_toilet"
+                })
+    return fixtures
+
+
+def detect_rectangular_fixtures(gray):
+    """Detect rectangular fixtures (bathtub, shower pan)"""
+    edges = cv2.Canny(gray, 50, 150)
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    fixtures = []
+    for cnt in contours:
+        epsilon = 0.02 * cv2.arcLength(cnt, True)
+        approx = cv2.approxPolyDP(cnt, epsilon, True)
+        x, y, w, h = cv2.boundingRect(cnt)
+        area = cv2.contourArea(cnt)
+        if len(approx) == 4 and area > 800:
+            aspect_ratio = max(w, h) / min(w, h)
+            if 1.8 <= aspect_ratio <= 3.5:
+                fixtures.append({
+                    "x": int(x),
+                    "y": int(y),
+                    "width": int(w),
+                    "height": int(h),
+                    "aspect_ratio": round(float(aspect_ratio), 2),
+                    "type": "bathtub_or_shower_pan"
+                })
+    return fixtures
 
 
 def parse_dimensions(text_data):
@@ -245,7 +290,7 @@ def analyze_floorplan(pdf_path):
         raise FileNotFoundError(f"PDF not found: {pdf_path}")
 
     try:
-        # Create templates on first run
+        # Step 0: Create templates if not exist
         if not os.path.exists("templates"):
             create_templates()
 
@@ -278,7 +323,11 @@ def analyze_floorplan(pdf_path):
             matches = detect_fixture_by_template(gray, path, threshold=0.7)
             fixtures_from_template[name] = matches
 
-        # Step 6: Text-based fixtures
+        # Step 6: Shape-Based Detection
+        circular_fixtures = detect_circular_fixtures(gray)
+        rectangular_fixtures = detect_rectangular_fixtures(gray)
+
+        # Step 7: Text-Based Fixtures
         textual_fixtures = detect_sanitary_fixtures_from_text(text_data)
         labels = detect_labels(text_data)
 
@@ -290,8 +339,14 @@ def analyze_floorplan(pdf_path):
             "walls": walls,
             "door_count": len(doors),
             "doors": doors,
-            "fixtures_from_template": fixtures_from_template,
-            "fixtures_from_text": textual_fixtures,
+            "fixtures": {
+                "from_text": textual_fixtures,
+                "from_template": fixtures_from_template,
+                "from_shape": {
+                    "circular": circular_fixtures,
+                    "rectangular": rectangular_fixtures
+                }
+            },
             "detected_labels": labels,
             "status": "success"
         }
