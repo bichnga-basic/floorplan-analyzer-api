@@ -3,6 +3,7 @@
 import cv2
 import numpy as np
 import fitz  # PyMuPDF
+import re  # ← Add this here
 import json
 import os
 from pdf2image import convert_from_path
@@ -82,7 +83,6 @@ def detect_walls_and_doors(gray):
 
 def estimate_room_size_from_text(text_data):
     """Look for dimension labels like '3.5m x 2.8m'"""
-    import re
     for item in text_data:
         text = item["text"]
         match = re.search(r'(\d+\.?\d*)\s*[x×]\s*(\d+\.?\d*)\s*m', text, re.IGNORECASE)
