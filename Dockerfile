@@ -2,6 +2,8 @@ FROM python:3.10-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
+ENV FLASK_ENV=production
+ENV FLASK_APP=app.py
 
 # Install system dependencies
 RUN apt-get update && \
@@ -31,6 +33,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Clean up pip cache
+RUN pip cache purge
+
 # Copy application files
 COPY floorplan_analyzer.py .
 COPY app.py .
@@ -39,7 +44,8 @@ COPY app.py .
 RUN mkdir -p uploads
 RUN chmod -R 755 uploads
 
+# Health check endpoint
 EXPOSE 5000
 
-# Command to run the application
+# Start Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "120", "app:app"]
