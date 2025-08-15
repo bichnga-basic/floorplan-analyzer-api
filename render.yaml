@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: floorplan-analyzer-api
+    runtime: python
+    envVars:
+      - key: PORT
+        value: 10000
+    buildCommand: |
+      apt-get update && apt-get install -y \
+        poppler-utils \
+        libgl1-mesa-glx \
+        libglib2.0-0
+      pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    region: oregon

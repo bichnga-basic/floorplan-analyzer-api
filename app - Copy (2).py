@@ -2,18 +2,13 @@ import os
 from flask import Flask, request, jsonify
 import uuid
 
-# ✅ Move the import to the top — this is critical for Gunicorn/Render
-from floorplan_analyzer import analyze_floorplan
-
 app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-
 @app.route("/health")
 def health():
     return jsonify({"status": "ok"}), 200
-
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
@@ -35,11 +30,9 @@ def analyze():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        if os.path.exists(filepath):
-            os.remove(filepath)  # Clean up
+        os.remove(filepath)  # Clean up
 
-
-# Only run if executed directly (for local dev)
 if __name__ == "__main__":
+    from floorplan_analyzer import analyze_floorplan
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
