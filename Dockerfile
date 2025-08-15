@@ -48,4 +48,5 @@ RUN chmod -R 755 uploads
 EXPOSE 5000
 
 # Start Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "120", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "--timeout", "120", "app:app"]
+CMD ["/bin/sh", "-c", "ls -la && python -c 'from floorplan_analyzer import analyze_floorplan; print(\"✅ Imported analyze_floorplan\")' && gunicorn --bind 0.0.0.0:5000 --workers 1 --timeout 120 app:app"]
