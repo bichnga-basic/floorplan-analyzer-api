@@ -1,4 +1,4 @@
-# hybrid_floorplan_analyzer.py
+# floorplan_analyzer_with_scale_and_templates.py
 import cv2
 import numpy as np
 import fitz  # PyMuPDF
@@ -26,33 +26,124 @@ def to_native(obj):
         return obj
 
 
-def create_templates():
-    """Generate standard fixture templates and save to 'templates/'"""
+def create_all_bathroom_templates():
+    """Generate comprehensive templates for all bathroom fixtures"""
     os.makedirs("templates", exist_ok=True)
 
-    # 1. Toilet: Circle with line
-    toilet = np.zeros((50, 50), dtype=np.uint8)
-    cv2.circle(toilet, (25, 25), 15, 255, 2)
-    cv2.line(toilet, (25, 25), (25, 35), 255, 2)
-    cv2.imwrite("templates/toilet.png", toilet)
+    # 1. TOILETS
+    toilet1 = np.zeros((50, 60), dtype=np.uint8)
+    cv2.ellipse(toilet1, (30, 25), (25, 18), 0, 0, 360, 255, -1)
+    cv2.line(toilet1, (30, 25), (30, 40), 255, 2)
+    cv2.imwrite("templates/toilet_one_piece.png", toilet1)
 
-    # 2. Sink: Small rectangle
-    sink = np.zeros((40, 40), dtype=np.uint8)
-    cv2.rectangle(sink, (10, 10), (30, 25), 255, -1)
-    cv2.imwrite("templates/sink.png", sink)
+    toilet2 = np.zeros((70, 60), dtype=np.uint8)
+    cv2.rectangle(toilet2, (15, 10), (45, 30), 255, -1)
+    cv2.rectangle(toilet2, (20, 30), (40, 50), 255, -1)
+    cv2.line(toilet2, (30, 30), (30, 40), 255, 2)
+    cv2.imwrite("templates/toilet_two_piece.png", toilet2)
 
-    # 3. Bathtub: Long rectangle
-    bathtub = np.zeros((60, 120), dtype=np.uint8)
-    cv2.rectangle(bathtub, (15, 15), (105, 45), 255, -1)
-    cv2.imwrite("templates/bathtub.png", bathtub)
+    toilet3 = np.zeros((40, 60), dtype=np.uint8)
+    cv2.ellipse(toilet3, (30, 20), (25, 15), 0, 0, 360, 255, 2)
+    cv2.line(toilet3, (30, 20), (30, 35), 255, 2)
+    cv2.imwrite("templates/toilet_wall_hung.png", toilet3)
 
-    # 4. Window: Two parallel lines
-    window = np.zeros((50, 50), dtype=np.uint8)
-    cv2.line(window, (10, 20), (40, 20), 255, 2)
-    cv2.line(window, (10, 30), (40, 30), 255, 2)
-    cv2.imwrite("templates/window.png", window)
+    toilet4 = np.zeros((50, 70), dtype=np.uint8)
+    cv2.ellipse(toilet4, (35, 25), (30, 20), 0, 0, 360, 255, -1)
+    cv2.line(toilet4, (35, 25), (35, 40), 255, 2)
+    cv2.rectangle(toilet4, (55, 15), (65, 35), 255, 1)
+    cv2.imwrite("templates/toilet_smart.png", toilet4)
 
-    print("✅ Templates created in 'templates/' folder!")
+    # 2. URINALS
+    urinal1 = np.zeros((50, 40), dtype=np.uint8)
+    cv2.ellipse(urinal1, (20, 25), (15, 20), 0, 0, 180, 255, 2)
+    cv2.line(urinal1, (20, 5), (20, 25), 255, 2)
+    cv2.imwrite("templates/urinal_bowl.png", urinal1)
+
+    urinal2 = np.zeros((40, 100), dtype=np.uint8)
+    cv2.rectangle(urinal2, (10, 10), (90, 30), 255, -1)
+    cv2.imwrite("templates/urinal_trough.png", urinal2)
+
+    # 3. SINKS
+    sink1 = np.zeros((50, 60), dtype=np.uint8)
+    cv2.ellipse(sink1, (30, 25), (25, 15), 0, 0, 180, 255, 2)
+    cv2.line(sink1, (10, 25), (50, 25), 255, 1)
+    cv2.imwrite("templates/sink_wall_mounted.png", sink1)
+
+    sink2 = np.zeros((70, 60), dtype=np.uint8)
+    cv2.ellipse(sink2, (30, 25), (25, 15), 0, 0, 180, 255, 2)
+    cv2.line(sink2, (30, 45), (30, 65), 255, 2)
+    cv2.rectangle(sink2, (25, 65), (35, 70), 255, -1)
+    cv2.imwrite("templates/sink_pedestal.png", sink2)
+
+    sink3 = np.zeros((50, 50), dtype=np.uint8)
+    cv2.circle(sink3, (25, 25), 20, 255, 2)
+    cv2.circle(sink3, (25, 25), 10, 255, 1)
+    cv2.imwrite("templates/sink_vessel_round.png", sink3)
+
+    sink4 = np.zeros((50, 60), dtype=np.uint8)
+    cv2.ellipse(sink4, (30, 25), (25, 18), 0, 0, 360, 255, 2)
+    cv2.ellipse(sink4, (30, 25), (15, 10), 0, 0, 360, 255, 1)
+    cv2.imwrite("templates/sink_vessel_oval.png", sink4)
+
+    sink5 = np.zeros((40, 80), dtype=np.uint8)
+    cv2.rectangle(sink5, (10, 10), (70, 30), 255, -1)
+    cv2.line(sink5, (10, 20), (70, 20), 255, 1)
+    cv2.imwrite("templates/sink_console.png", sink5)
+
+    # 4. BATHTUBS
+    tub1 = np.zeros((60, 120), dtype=np.uint8)
+    cv2.rectangle(tub1, (15, 15), (105, 45), 255, -1)
+    cv2.line(tub1, (15, 15), (105, 15), 255, 1)
+    cv2.line(tub1, (15, 45), (105, 45), 255, 1)
+    cv2.imwrite("templates/bathtub_standard.png", tub1)
+
+    tub2 = np.zeros((100, 100), dtype=np.uint8)
+    cv2.rectangle(tub2, (10, 10), (90, 30), 255, -1)
+    cv2.rectangle(tub2, (10, 10), (30, 90), 255, -1)
+    cv2.imwrite("templates/bathtub_corner.png", tub2)
+
+    tub3 = np.zeros((70, 130), dtype=np.uint8)
+    cv2.rectangle(tub3, (15, 15), (115, 55), 255, 3)
+    cv2.rectangle(tub3, (25, 25), (105, 45), 255, -1)
+    cv2.imwrite("templates/bathtub_soaking.png", tub3)
+
+    tub4 = np.zeros((80, 140), dtype=np.uint8)
+    cv2.rectangle(tub4, (20, 20), (120, 60), 255, -1)
+    cv2.rectangle(tub4, (0, 0), (140, 10), 255, -1)
+    cv2.rectangle(tub4, (0, 0), (10, 80), 255, -1)
+    cv2.rectangle(tub4, (130, 0), (140, 80), 255, -1)
+    cv2.imwrite("templates/bathtub_alcove.png", tub4)
+
+    # 5. SHOWERS
+    shower1 = np.zeros((70, 70), dtype=np.uint8)
+    cv2.rectangle(shower1, (15, 15), (55, 55), 255, 2)
+    cv2.line(shower1, (15, 15), (55, 55), 255, 1)
+    cv2.line(shower1, (15, 55), (55, 15), 255, 1)
+    cv2.imwrite("templates/shower_stall_square.png", shower1)
+
+    shower2 = np.zeros((80, 100), dtype=np.uint8)
+    cv2.rectangle(shower2, (10, 10), (90, 70), 255, 2)
+    cv2.line(shower2, (10, 10), (90, 70), 255, 1)
+    cv2.line(shower2, (10, 70), (90, 10), 255, 1)
+    cv2.imwrite("templates/shower_stall_rect.png", shower2)
+
+    shower3 = np.zeros((100, 120), dtype=np.uint8)
+    cv2.rectangle(shower3, (10, 10), (110, 90), 255, 2)
+    cv2.line(shower3, (60, 10), (60, 25), 255, 2)
+    cv2.imwrite("templates/shower_walk_in.png", shower3)
+
+    shower4 = np.zeros((90, 110), dtype=np.uint8)
+    cv2.rectangle(shower4, (15, 15), (95, 75), 255, 2)
+    cv2.circle(shower4, (25, 25), 5, 255, 1)
+    cv2.imwrite("templates/shower_pan_outline.png", shower4)
+
+    shower5 = np.zeros((100, 100), dtype=np.uint8)
+    cv2.rectangle(shower5, (10, 10), (90, 90), 255, 2)
+    cv2.circle(shower5, (50, 50), 10, 255, 1)
+    cv2.line(shower5, (50, 40), (50, 30), 255, 1)
+    cv2.imwrite("templates/shower_steam.png", shower5)
+
+    print("✅ All bathroom fixture templates created in 'templates/' folder!")
 
 
 def pdf_to_image(pdf_path, dpi=200):
@@ -98,6 +189,29 @@ def extract_text_with_fitz(pdf_path):
         raise RuntimeError(f"Failed to extract text: {e}")
 
 
+def parse_scale_info(text_data):
+    """
+    Parse scale info like '1 inch = 4'0"'
+    Returns pixels_per_foot
+    """
+    for item in text_data:
+        text = item["text"].lower()
+        match = re.search(r"(\d+)\s*inch\s*=\s*(\d+)'(\d*)\"", text)
+        if match:
+            inches_per_unit = int(match.group(1))
+            ft = int(match.group(2))
+            inch = int(match.group(3)) if match.group(3) else 0
+            real_length_ft = ft + inch / 12
+
+            # At 200 DPI, 1 inch = 200 pixels
+            pixels_per_inch = 200  # Based on dpi in pdf_to_image()
+            pixels_per_unit = inches_per_unit * pixels_per_inch
+            pixels_per_foot = pixels_per_unit / real_length_ft
+
+            return pixels_per_foot
+    return None  # Fallback to 20 px per foot
+
+
 def detect_walls_and_doors(gray):
     """Detect walls (thick lines) and door gaps"""
     try:
@@ -112,7 +226,10 @@ def detect_walls_and_doors(gray):
             area = cv2.contourArea(cnt)
             if area > 1000 and max(w, h) > 30:
                 walls.append({
-                    "x": int(x), "y": int(y), "width": int(w), "height": int(h)
+                    "x": int(x),
+                    "y": int(y),
+                    "width": int(w),
+                    "height": int(h)
                 })
 
         edges = cv2.Canny(gray, 50, 150, apertureSize=3)
@@ -124,15 +241,11 @@ def detect_walls_and_doors(gray):
                 length = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
                 if 80 < length < 150:
                     cx, cy = int((x1 + x2) / 2), int((y1 + y2) / 2)
-                    near_wall = any(
-                        abs(cx - (w["x"] + w["width"]/2)) < 100 and
-                        abs(cy - (w["y"] + w["height"]/2)) < 100
-                        for w in walls
-                    )
-                    if near_wall:
-                        doors.append({
-                            "x": cx, "y": cy, "length": int(length)
-                        })
+                    doors.append({
+                        "x": cx,
+                        "y": cy,
+                        "length_px": int(length)
+                    })
         return walls, doors
     except Exception as e:
         print(f"[ERROR] Wall/Door detection failed: {e}")
@@ -157,67 +270,15 @@ def detect_fixture_by_template(gray, template_path, threshold=0.7):
     for pt in zip(*loc[::-1]):
         x, y = pt[0], pt[1]
         matches.append({
+            "template": os.path.basename(template_path),
             "x": int(x),
             "y": int(y),
             "width": int(w),
             "height": int(h),
-            "confidence": float(result[y, y]),
-            "type": os.path.basename(template_path).replace(".png", "")
+            "confidence": float(result[y, x])
         })
 
-    # Remove duplicates (nearby detections)
-    filtered = []
-    for match in matches:
-        if not any(
-            abs(match["x"] - m["x"]) < 20 and abs(match["y"] - m["y"]) < 20
-            for m in filtered
-        ):
-            filtered.append(match)
-    return filtered
-
-
-def detect_circular_fixtures(gray):
-    """Detect circular fixtures (toilet, sink)"""
-    circles = cv2.HoughCircles(
-        gray, cv2.HOUGH_GRADIENT, dp=1.2, minDist=100,
-        param1=50, param2=30, minRadius=15, maxRadius=35
-    )
-    fixtures = []
-    if circles is not None:
-        circles = np.round(circles[0, :]).astype("int")
-        for (x, y, r) in circles:
-            if 15 <= r <= 35:
-                fixtures.append({
-                    "x": int(x),
-                    "y": int(y),
-                    "radius": int(r),
-                    "type": "sink_or_toilet"
-                })
-    return fixtures
-
-
-def detect_rectangular_fixtures(gray):
-    """Detect rectangular fixtures (bathtub, shower pan)"""
-    edges = cv2.Canny(gray, 50, 150)
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    fixtures = []
-    for cnt in contours:
-        epsilon = 0.02 * cv2.arcLength(cnt, True)
-        approx = cv2.approxPolyDP(cnt, epsilon, True)
-        x, y, w, h = cv2.boundingRect(cnt)
-        area = cv2.contourArea(cnt)
-        if len(approx) == 4 and area > 800:
-            aspect_ratio = max(w, h) / min(w, h)
-            if 1.8 <= aspect_ratio <= 3.5:
-                fixtures.append({
-                    "x": int(x),
-                    "y": int(y),
-                    "width": int(w),
-                    "height": int(h),
-                    "aspect_ratio": round(float(aspect_ratio), 2),
-                    "type": "bathtub_or_shower_pan"
-                })
-    return fixtures
+    return matches
 
 
 def parse_dimensions(text_data):
@@ -232,19 +293,8 @@ def parse_dimensions(text_data):
             total_ft = ft + inch / 12
             dimensions.append({
                 "text": text,
-                "value_m": round(total_ft * 0.3048, 2),
+                "value_ft": total_ft,
                 "unit": "feet",
-                "x0": float(item["x0"]),
-                "y0": float(item["y0"])
-            })
-        meter_match = re.search(r"(\d+\.?\d*)\s*[x×]\s*(\d+\.?\d*)\s*m", text, re.IGNORECASE)
-        if meter_match:
-            w = float(meter_match.group(1))
-            h = float(meter_match.group(2))
-            dimensions.append({
-                "text": text,
-                "value_m": max(w, h),
-                "unit": "meters",
                 "x0": float(item["x0"]),
                 "y0": float(item["y0"])
             })
@@ -255,9 +305,11 @@ def detect_sanitary_fixtures_from_text(text_data):
     """Detect fixtures from text labels"""
     fixtures = []
     keywords = {
-        "bathtub": ["tub", "bathtub", "shower pan", "custom shower pan"],
-        "toilet": ["toilet", "wc", "water closet"],
-        "sink": ["sink", "vanity", "basin", "lavatory"]
+        "toilet": ["toilet", "wc", "water closet", "one piece", "two piece", "wall hung", "smart toilet"],
+        "urinal": ["urinal", "trough"],
+        "sink": ["sink", "basin", "lavatory", "vanity", "vessel", "pedestal", "console"],
+        "bathtub": ["tub", "bathtub", "soaking tub", "corner tub", "alcove"],
+        "shower": ["shower", "shower pan", "custom shower pan", "steam shower", "walk-in"]
     }
     for item in text_data:
         text_lower = item["text"].lower()
@@ -292,7 +344,7 @@ def analyze_floorplan(pdf_path):
     try:
         # Step 0: Create templates if not exist
         if not os.path.exists("templates"):
-            create_templates()
+            create_all_bathroom_templates()
 
         # Step 1: Convert PDF to image
         original_img, gray = pdf_to_image(pdf_path)
@@ -300,40 +352,88 @@ def analyze_floorplan(pdf_path):
         # Step 2: Extract text
         text_data = extract_text_with_fitz(pdf_path)
 
-        # Step 3: Detect walls and doors
+        # Step 3: Parse scale
+        pixels_per_foot = parse_scale_info(text_data)
+        if pixels_per_foot is None:
+            pixels_per_foot = 20.0  # Fallback: ~20px per foot
+
+        # Step 4: Detect walls and doors
         walls, doors = detect_walls_and_doors(gray)
 
-        # Step 4: Parse dimensions
+        # Step 5: Parse dimensions
         dimensions = parse_dimensions(text_data)
-        room_size_m = None
+        room_size_ft = None
         for dim in dimensions:
-            if dim["unit"] in ["feet", "meters"]:
-                room_size_m = dim["value_m"]
+            if dim["unit"] == "feet":
+                room_size_ft = dim["value_ft"]
                 break
-        if room_size_m is None and walls:
-            xs = [w["x"] + w["width"] for w in walls]
-            ys = [w["y"] + w["height"] for w in walls]
-            width_px = max(xs) - min([w["x"] for w in walls])
-            room_size_m = round(width_px * 0.05, 2)
 
-        # Step 5: Template Matching for Fixtures
-        fixtures_from_template = {}
-        for name in ["toilet", "sink", "bathtub", "window"]:
-            path = f"templates/{name}.png"
-            matches = detect_fixture_by_template(gray, path, threshold=0.7)
-            fixtures_from_template[name] = matches
+        # Fallback: estimate from wall size
+        if room_size_ft is None and walls:
+            wall_width_px = max(w["x"] + w["width"] for w in walls) - min(w["x"] for w in walls)
+            room_size_ft = wall_width_px / pixels_per_foot
 
-        # Step 6: Shape-Based Detection
-        circular_fixtures = detect_circular_fixtures(gray)
-        rectangular_fixtures = detect_rectangular_fixtures(gray)
+        # Convert to meters
+        room_size_m = round(room_size_ft * 0.3048, 2)
 
-        # Step 7: Text-Based Fixtures
+        # Step 6: Template Matching for All Fixtures
+        template_groups = {
+            "toilet": [
+                "toilet_one_piece.png", "toilet_two_piece.png", "toilet_wall_hung.png", "toilet_smart.png"
+            ],
+            "urinal": [
+                "urinal_bowl.png", "urinal_trough.png"
+            ],
+            "sink": [
+                "sink_wall_mounted.png", "sink_pedestal.png",
+                "sink_vessel_round.png", "sink_vessel_oval.png", "sink_console.png"
+            ],
+            "bathtub": [
+                "bathtub_standard.png", "bathtub_corner.png",
+                "bathtub_soaking.png", "bathtub_alcove.png"
+            ],
+            "shower": [
+                "shower_stall_square.png", "shower_stall_rect.png",
+                "shower_walk_in.png", "shower_pan_outline.png", "shower_steam.png"
+            ]
+        }
+
+        all_matches = []
+        for ftype, templates in template_groups.items():
+            for t in templates:
+                path = f"templates/{t}"
+                matches = detect_fixture_by_template(gray, path, threshold=0.7)
+                for m in matches:
+                    m["type"] = ftype
+                all_matches.extend(matches)
+
+        # Remove duplicates
+        unique_matches = []
+        for match in all_matches:
+            is_duplicate = False
+            for existing in unique_matches:
+                dist = ((match["x"] - existing["x"])**2 + (match["y"] - existing["y"])**2)**0.5
+                if dist < 30:
+                    if match["confidence"] > existing["confidence"]:
+                        unique_matches.remove(existing)
+                        unique_matches.append(match)
+                    is_duplicate = True
+                    break
+            if not is_duplicate:
+                unique_matches.append(match)
+
+        # Step 7: Text-based Fixtures
         textual_fixtures = detect_sanitary_fixtures_from_text(text_data)
         labels = detect_labels(text_data)
 
         # Final result
         result = {
-            "room_size_m": round(float(room_size_m), 2) if room_size_m else None,
+            "room_size_m": round(float(room_size_m), 2),
+            "room_size_ft": round(float(room_size_ft), 2),
+            "scale": {
+                "text": "1 inch = 4'0\"",
+                "pixels_per_foot": round(float(pixels_per_foot), 2)
+            },
             "dimensions": dimensions,
             "wall_count": len(walls),
             "walls": walls,
@@ -341,11 +441,7 @@ def analyze_floorplan(pdf_path):
             "doors": doors,
             "fixtures": {
                 "from_text": textual_fixtures,
-                "from_template": fixtures_from_template,
-                "from_shape": {
-                    "circular": circular_fixtures,
-                    "rectangular": rectangular_fixtures
-                }
+                "from_template": unique_matches
             },
             "detected_labels": labels,
             "status": "success"
