@@ -4,6 +4,7 @@ import numpy as np
 import fitz  # PyMuPDF
 import json
 import os
+import re  # <-- Add this line
 from pdf2image import convert_from_path
 
 def pdf_to_image(pdf_path, dpi=200):
