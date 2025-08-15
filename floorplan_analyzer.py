@@ -90,6 +90,47 @@ def estimate_room_size_from_text(text_data):
             return float(match.group(1)), float(match.group(2))
     return None, None
 
+def detect_sanitary_ware(gray):
+    """Detect toilet, basin, tub using image contours"""
+    sanitary_ware = {
+        "toilet": [],
+        "basin": [],
+        "tub": []
+    }
+
+    # Apply edge detection
+    edges = cv2.Canny(gray, 50, 150)
+
+    # Find contours
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area < 500:  # Too small
+            continue
+
+        # Approximate contour to polygon
+        epsilon = 0.02 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+
+        x, y, w, h = cv2.boundingRect(approx)
+        aspect_ratio = float(w) / h
+
+        # Try to classify based on shape and size
+        if 0.8 < aspect_ratio < 1.2:  # Square-like
+            # Likely a basin/sink
+            if area < 2000:
+                sanitary_ware["basin"].append({"x": x, "y": y, "width": w, "height": h})
+        elif 1.5 < aspect_ratio < 3.0:  # Long rectangle
+            # Likely a bathtub
+            if area > 3000:
+                sanitary_ware["tub"].append({"x": x, "y": y, "width": w, "height": h})
+        elif len(approx) == 4:  # Rectangle
+            # Could be a toilet or tub
+            if area > 2000 and aspect_ratio > 1.0:
+                sanitary_ware["toilet"].append({"x": x, "y": y, "width": w, "height": h})
+
+    return sanitary_ware
 
 def analyze_floorplan(pdf_path):
     """Main function: Analyze PDF and return layout JSON"""
@@ -112,30 +153,22 @@ def analyze_floorplan(pdf_path):
     if width_m is None:
         xs = [w["x"] + w["width"] for w in walls]
         ys = [w["y"] + w["height"] for w in walls]
-        if xs and ys:
-            width_px = max(xs) - min([w["x"] for w in walls])
-            height_px = max(ys) - min([w["y"] for w in walls])
-            # Assume ~20px per meter (adjust based on DPI)
-            width_m = round(width_px * 0.05, 2)
-            height_m = round(height_px * 0.05, 2)
+        width_m = max(xs) - min(xs)
+        height_m = max(ys) - min(ys)
 
-    # Extract room labels
-    rooms = []
-    keywords = ["bathroom", "kitchen", "bedroom", "living", "hall", "wc"]
-    for item in text_data:
-        text = item["text"].lower()
-        if any(kw in text for kw in keywords) and len(text) < 30:
-            rooms.append(text.strip())
+    # Step 5: Detect sanitary ware using image analysis
+    sanitary_ware = detect_sanitary_ware(gray)
 
-    # Format result
+    # Build result
     result = {
-        "room_width_m": round(width_m, 2) if width_m else None,
+        "room_width_m": round(width_m, 2),
         "room_length_m": round(height_m, 2) if height_m else None,
         "door_count": len(doors),
         "doors": doors,
         "wall_count": len(walls),
         "detected_labels": list(set(rooms)),
         "dimensions_text": [t["text"] for t in text_data if "m" in t["text"].lower() and re.search(r'\d', t["text"])],
+        "sanitary_ware": sanitary_ware,
         "status": "success"
     }
 
